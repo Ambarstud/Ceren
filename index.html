@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basit Çizim Alanı</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            touch-action: none; /* Mobilde dokunmayı yönetmek için */
+        }
+        #clearButton, #saveButton {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Çizim Alanı</h2>
+<canvas id="drawingCanvas" width="300" height="300"></canvas>
+<br>
+<button id="clearButton">Temizle</button>
+<button id="saveButton">Kaydet</button>
+<br>
+<img id="savedImage" alt="Çizim burada gösterilecek" style="display:none; margin-top:10px;">
+
+<script>
+    const canvas = document.getElementById('drawingCanvas');
+    const context = canvas.getContext('2d');
+    let drawing = false;
+
+    // Mobil ve fare çizimini başlatma
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing, false);
+    canvas.addEventListener('touchmove', draw, false);
+    canvas.addEventListener('touchend', stopDrawing, false);
+    
+    function getMousePos(event) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (event.clientX - rect.left) * scaleX,
+            y: (event.clientY - rect.top) * scaleY
+        };
+    }
+    
+    function getTouchPos(event) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const touch = event.touches[0];
+        return {
+            x: (touch.clientX - rect.left) * scaleX,
+            y: (touch.clientY - rect.top) * scaleY
+        };
+    }
+
+    function startDrawing(event) {
+        drawing = true;
+        const pos = event.type.includes('touch') ? getTouchPos(event) : getMousePos(event);
+        context.beginPath();
+        context.moveTo(pos.x, pos.y);
+        event.preventDefault();
+    }
+
+    function draw(event) {
+        if (!drawing) return;
+        const pos = event.type.includes('touch') ? getTouchPos(event) : getMousePos(event);
+        context.lineTo(pos.x, pos.y);
+        context.stroke();
+        event.preventDefault();
+    }
+
+    function stopDrawing() {
+        drawing = false;
+        context.closePath();
+    }
+
+    // Temizleme butonu
+    document.getElementById('clearButton').addEventListener('click', () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Kaydetme butonu
+    document.getElementById('saveButton').addEventListener('click', () => {
+        const image = canvas.toDataURL();
+        const savedImage = document.getElementById('savedImage');
+        savedImage.src = image;
+        savedImage.style.display = 'block';
+    });
+</script>
+
+</body>
+</html>
